@@ -148,13 +148,13 @@ class connectionHandler {
       this.client.write(data);
     });
 
-    // if (this.config.connectionType === "websocket") {
-    //   const testUpgrade = await new Promise<string>((resolve) => this.client.once("data", (data) => resolve(data.toString())));
-    //   if (!/HTTP\/.*\s+101/gi.test(testUpgrade)) {
-    //     this.closeClient("Bad Response", 400);
-    //     return;
-    //   }
-    // }
+    if (this.config.connectionType === "websocket") {
+      const testUpgrade = await new Promise<string>((resolve) => this.client.once("data", (data) => resolve(data.toString())));
+      if (!/HTTP\/.*\s+101/gi.test(testUpgrade)) {
+        // Send ok response
+        this.target.write("HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n");
+      }
+    }
 
     let blockWebsocket = this.config.connectionType === "websocket";
     this.client.on("data", data => {
