@@ -94,11 +94,9 @@ class connectionHandler {
         // Payload
         var payload = `CONNECT ${this.config.config.proxy.host}:${this.config.config.proxy.port} HTTP/1.0\r\n\r\n`;
         if (this.config.connectionType === "websocket"||this.config.connectionType === "http_proxy_payload") payload = this.parsePayload();
-
-        if (payload.includes("[split]")||payload.includes("[delay_split]")||payload.includes("[instant_split]")) {
-          payload = payload.replace(/\[split\]/gi, '||1.0||')
-          .replace(/\[delay_split\]/gi, "||1.5||")
-          .replace(/\[instant_split\]/gi, "||0.0||");
+        console.log("%s wsSSH (SSH): Payload:\n**************\n%s\n**************\n", this.clientIpre, payload);
+        if (["[split]", "[delay_split]", "[instant_split]"].some(x => payload.includes(x))) {
+          payload = payload.replace(/\[split\]/gi, '||1.0||').replace(/\[delay_split\]/gi, "||1.5||").replace(/\[instant_split\]/gi, "||0.0||");
           for (const payl of payload.split("||")) {
             if (["1.0", "1.5", "0.0"].includes(payl)) {
               this.target.write(payl);
@@ -150,15 +148,22 @@ class connectionHandler {
       this.client.write(data);
     });
 
-    if (this.config.connectionType === "websocket") {
-      const testUpgrade = await new Promise<string>((resolve) => this.client.once("data", (data) => resolve(data.toString())));
-      if (!/HTTP\/.*\s+101/gi.test(testUpgrade)) {
-        this.closeClient("Bad Response", 400);
-        return;
-      }
-    }
+    // if (this.config.connectionType === "websocket") {
+    //   const testUpgrade = await new Promise<string>((resolve) => this.client.once("data", (data) => resolve(data.toString())));
+    //   if (!/HTTP\/.*\s+101/gi.test(testUpgrade)) {
+    //     this.closeClient("Bad Response", 400);
+    //     return;
+    //   }
+    // }
+
+    let blockWebsocket = this.config.connectionType === "websocket";
     this.client.on("data", data => {
       if (this.closed) return;
+      if (blockWebsocket) {
+        blockWebsocket = false;
+        console.log("%s wsSSH (SSH): Websocket upgrade detected:\n%s", this.clientIpre, data.toString());
+        return;
+      }
       this.target.write(data);
     });
 
@@ -193,7 +198,6 @@ class connectionHandler {
     .replace(/\[auth\]/gi, "");
 
     // Send Payload
-    console.log(ParsedPayload);
     return ParsedPayload;
   }
 
