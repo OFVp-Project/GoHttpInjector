@@ -1,0 +1,28 @@
+{
+  "name": "gohttpinjector",
+  "version": "0.1.1",
+  "description": "Create tunnel with custom payload.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sirherobrine23/GoHttpInjector.git"
+  },
+  "keywords": [
+    "ssh",
+    "payload"
+  ],
+  "author": "Sirherobrine23",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/Sirherobrine23/GoHttpInjector/issues"
+  },
+  "homepage": "https://github.com/Sirherobrine23/GoHttpInjector#readme",
+  "devDependencies": {
+    "@types/node": "^17.0.34",
+    "ts-node": "^10.7.0",
+    "typescript": "^4.6.4"
+  }
+}
