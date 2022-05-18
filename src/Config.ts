@@ -16,10 +16,6 @@ export type baseConfig = {
       auth: {username: string} & {
         type: "password",
         password: string
-      }|{
-        type: "key",
-        publicKey: string,
-        privateKey?: string
       }
     },
     sni?: {

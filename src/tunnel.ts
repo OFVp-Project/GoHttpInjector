@@ -78,10 +78,6 @@ class connectionHandler {
   private connect_target() {
     this.target = net.createConnection({port: this.config.config.proxy.port, host: this.config.config.proxy.host});
     this.closed = false;
-    this.target.once("connect", () => {
-      if (this.logLevel !== "NONE") console.log("%s wsSSH (SSH): Payload %s", this.clientIpre, this.config.config.payload);
-      this.sendPayload();
-    });
     this.target.once("error", (err) => {
       if (this.logLevel !== "NONE") console.log("%s wsSSH (SSH): Error connecting to %s:%d: %s", this.clientIpre, this.config.config.proxy.host, this.config.config.proxy.port, err.message);
       this.closeClient();
@@ -89,6 +85,59 @@ class connectionHandler {
     this.target.once("close", () => {
       if (this.logLevel !== "NONE") console.log("%s wsSSH (SSH): Disconnected from %s:%d", this.clientIpre, this.config.config.proxy.host, this.config.config.proxy.port);
       this.closeClient();
+    });
+    return new Promise((resolve, reject) => {
+      this.target.once("error", reject);
+      this.target.once("connect", async () => {
+        await selectWait([this.client], [this.target]);
+        if (this.logLevel !== "NONE") console.log("%s wsSSH (SSH): Payload %s", this.clientIpre, this.config.config.payload);
+        // Payload
+        var payload = `CONNECT ${this.config.config.proxy.host}:${this.config.config.proxy.port} HTTP/1.0\r\n\r\n`;
+        if (this.config.connectionType === "websocket"||this.config.connectionType === "http_proxy_payload") payload = this.parsePayload();
+
+        if (payload.includes("[split]")||payload.includes("[delay_split]")||payload.includes("[instant_split]")) {
+          payload = payload.replace(/\[split\]/gi, '||1.0||')
+          .replace(/\[delay_split\]/gi, "||1.5||")
+          .replace(/\[instant_split\]/gi, "||0.0||");
+          for (const payl of payload.split("||")) {
+            if (["1.0", "1.5", "0.0"].includes(payl)) {
+              this.target.write(payl);
+              if (this.logLevel !== "NONE") console.log("%s wsSSH (SSH): Payload %s", this.clientIpre, payl);
+              await new Promise((resolve) => setTimeout(resolve, payl === "1.0"?1000:payl === "1.5"?1500:0));
+            } else {
+              if (this.logLevel !== "NONE") console.log("%s wsSSH (SSH): Payload %s", this.clientIpre, payl);
+              this.target.write(payl);
+            }
+          }
+        } else if (payload.includes("[repeat_split]")) {
+          payload = payload.replace(/\[repeat_split\]/gi, "||1||").replace(/\[x-split\]/gi, "||1||");
+          const payl = [];
+          for (const element of payload.split("||")) {
+            if (!!element && element !== "1") payl.push(element);
+          }
+          let rpspli = payl[0]+payl[0];
+          this.target.write(rpspli);
+          this.target.write(payl[1]);
+        } else if (["[reverse_split]", "[x-split]"].some(x => payload.includes(x))) {
+          payload = payload.replace(/\[reverse_split\]/gi, "||2|").replace(/\[x-split\]/gi, "||2|");
+          const payl = [];
+          for (const element of payload.split("||")) {
+            if (!!element && element !== "2") payl.push(element);
+          }
+          this.target.write(payl[0]+payl[1])
+          this.target.write(payl[1])
+        } else if (payload.includes("[split-x]")) {
+          payload = payload.replace(/\[split-x\]/gi, "||3||");
+          let xsplit = [];
+          for (const element of payload.split("||")) {
+            if (!!element && element !== "3") xsplit.push(element);
+          }
+          this.target.write(xsplit[0]+xsplit[1]);
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          this.target.write(xsplit[1]);
+        } else this.target.write(payload);
+        return resolve(this.ClientConnectAndTransmit());
+      });
     });
   }
 
@@ -100,7 +149,7 @@ class connectionHandler {
       if (this.closed) return;
       this.client.write(data);
     });
-    
+
     if (this.config.connectionType === "websocket") {
       const testUpgrade = await new Promise<string>((resolve) => this.client.once("data", (data) => resolve(data.toString())));
       if (!/HTTP\/.*\s+101/gi.test(testUpgrade)) {
@@ -120,7 +169,7 @@ class connectionHandler {
     this.closeClient("Timeout", 400);
   }
 
-  private sendPayload() {
+  private parsePayload() {
     const { host, port } = this.config.config.ssh, { customUA } = this.config.config;
     const ParsedPayload = this.config.config.payload.replace(/\[crlf\]/gi, "\r\n")
     .replace(/\[crlf\*2\]/gi, "\r\n\r\n")
@@ -145,13 +194,7 @@ class connectionHandler {
 
     // Send Payload
     console.log(ParsedPayload);
-    this.target.write(ParsedPayload);
-  }
-
-  private async ConnectMethod() {
-    this.connect_target();
-    await selectWait([this.client], [this.target]);
-    return this.ClientConnectAndTransmit();
+    return ParsedPayload;
   }
 
   public async main() {
@@ -161,7 +204,7 @@ class connectionHandler {
       });
     });
     console.log(data);
-    return this.ConnectMethod();
+    return this.connect_target();
   }
 }
 
