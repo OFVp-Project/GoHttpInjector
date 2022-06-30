@@ -12,20 +12,20 @@ export function startProxy(connect: {payload: string, host: string, port: number
   })
 }
 
-const serverProxy = net.createServer(connection => {
-  const [host, port] = process.env.CONNECT.split(":");
-  const payload = process.env.payload;
-  startProxy({host, port: parseInt(port), payload: payload}, (socket) => {
-    connection.on("error", err => console.log(err));
-    socket.on("error", err => console.log(err));
-    connection.pipe(socket);
-    socket.pipe(connection);
-    connection.on("close", () => socket.end());
-    socket.on("close", () => connection.end());
-    socket.on("close", () => serverProxy.close());
-    if (process.env.SHOW_DATA === "true") {
-      connection.on("data", data => console.log(data.toString("utf8")));
-      socket.on("data", data => console.log(data.toString("utf8")));
-    }
-  });
-}).listen(8022, () => console.log("Listen on 8022"));
+// const serverProxy = net.createServer(connection => {
+//   const [host, port] = process.env.CONNECT.split(":");
+//   const payload = process.env.payload;
+//   startProxy({host, port: parseInt(port), payload: payload}, (socket) => {
+//     connection.on("error", err => console.log(err));
+//     socket.on("error", err => console.log(err));
+//     connection.pipe(socket);
+//     socket.pipe(connection);
+//     connection.on("close", () => socket.end());
+//     socket.on("close", () => connection.end());
+//     socket.on("close", () => serverProxy.close());
+//     if (process.env.SHOW_DATA === "true") {
+//       connection.on("data", data => console.log(data.toString("utf8")));
+//       socket.on("data", data => console.log(data.toString("utf8")));
+//     }
+//   });
+// }).listen(8022, () => console.log("Listen on 8022"));
