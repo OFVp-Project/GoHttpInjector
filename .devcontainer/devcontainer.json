@@ -1,5 +1,5 @@
 {
-  "name": "Bds Maneger Core",
+  "name": "go HTTP Injector (dont write in golang)",
   "updateRemoteUserUID": false,
   "containerUser": "develop",
   "remoteUser": "develop",
@@ -17,40 +17,40 @@
     "--privileged"
   ],
   "mounts": [
-    "target=/var/lib/docker,type=volume,source=bdsmanegercore"
+    "target=/var/lib/docker,type=volume,source=GoHttpInjector"
   ],
-  "extensions": [
-	"benshabatnoam.google-translate-ext",
-	"eamodio.gitlens",
-	"github.vscode-pull-request-github",
-	"visualstudioexptteam.vscodeintellicode",
-	"redhat.vscode-yaml",
-	"ms-vscode-remote.remote-containers",
-	"wix.vscode-import-cost",
-	"eg2.vscode-npm-script",
-	"christian-kohler.npm-intellisense",
-	"christian-kohler.path-intellisense",
-	"aaron-bond.better-comments",
-	"vscode-icons-team.vscode-icons",
-	"me-dutour-mathieu.vscode-github-actions",
-	"cschleiden.vscode-github-actions",
-	"oderwat.indent-rainbow",
-	"ms-azuretools.vscode-docker",
-	"formulahendry.code-runner",
-	"chrmarti.regex",
-	"oouo-diogo-perdigao.docthis",
-	"formulahendry.github-actions",
-	"VisualStudioExptTeam.vscodeintellicode",
-	"VisualStudioExptTeam.intellicode-api-usage-examples",
-	"euskadi31.json-pretty-printer",
-	"tgreen7.vs-code-node-require",
-	"leizongmin.node-module-intellisense"
-],
 	"settings": {
     "editor.tabSize": 2,
     "editor.minimap.enabled": false,
     "files.eol": "\n",
     "files.trimFinalNewlines": true,
     "files.trimTrailingWhitespace": true
-  }
+  },
+  "extensions": [
+    "benshabatnoam.google-translate-ext",
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+    "visualstudioexptteam.vscodeintellicode",
+    "redhat.vscode-yaml",
+    "ms-vscode-remote.remote-containers",
+    "wix.vscode-import-cost",
+    "eg2.vscode-npm-script",
+    "christian-kohler.npm-intellisense",
+    "christian-kohler.path-intellisense",
+    "aaron-bond.better-comments",
+    "vscode-icons-team.vscode-icons",
+    "me-dutour-mathieu.vscode-github-actions",
+    "cschleiden.vscode-github-actions",
+    "oderwat.indent-rainbow",
+    "ms-azuretools.vscode-docker",
+    "formulahendry.code-runner",
+    "chrmarti.regex",
+    "oouo-diogo-perdigao.docthis",
+    "formulahendry.github-actions",
+    "VisualStudioExptTeam.vscodeintellicode",
+    "VisualStudioExptTeam.intellicode-api-usage-examples",
+    "euskadi31.json-pretty-printer",
+    "tgreen7.vs-code-node-require",
+    "leizongmin.node-module-intellisense"
+  ]
 }
