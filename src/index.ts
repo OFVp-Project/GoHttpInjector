@@ -1,33 +1,22 @@
 #!/usr/bin/env node
 import yargs from "yargs";
-import socks from "socksv5";
-import { startProxy } from "./webProxy";
-import * as config from "./lib/configStorage";
 import sshClient from "./sshClient";
+import { startProxy } from "./webProxy";
+import { ServerStream } from "./socks";
+import * as config from "./lib/configStorage";
 
 async function createConnection(method: "webProxy") {
   const { payload, proxyHost, proxyPort, sshUsername, sshPassword } = await config.getConfig();
   if (method === "webProxy") {
     return new Promise<void>((_res, rej) => {
       console.log("Connection to %s:%f", proxyHost, proxyPort);
-      startProxy({payload, host: proxyHost, port: proxyPort}, (fn) => {
+      startProxy({payload, host: proxyHost, port: proxyPort}, (err, fn) => {
+        if(err) return console.log(err)
         console.log("Success to connect in Web Proxy")
-        sshClient({Username: sshUsername, Password: sshPassword, socket: fn}, (err, ssh) => {
-          if (err) return console.log(err);
+        const ssh = sshClient({Username: sshUsername, Password: sshPassword, socket: fn});
+        ssh.on("ready", () => {
           console.log("Success in SSH Connection!");
-          socks.createServer(function(info, accept, deny) {
-            console.log(info)
-            ssh.forwardOut(info.srcAddr, info.srcPort, info.dstAddr, info.dstPort, (err, stream) => {
-              if (err) {return deny();}
-              const clientSocket = accept(true);
-              if (clientSocket) {
-                stream.pipe(clientSocket).on('error', rej);
-                clientSocket.pipe(stream).on('error', rej);
-              }
-            });
-          }).useAuth(socks.auth.None()).listen(1080, '127.0.0.1', function() {
-            console.log('SOCKS server listening on port 1080');
-          });
+          ServerStream(ssh).then(_res).catch(rej);
         });
       });
     });

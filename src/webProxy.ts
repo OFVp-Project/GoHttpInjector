@@ -1,14 +1,16 @@
 import * as net from "node:net";
 import * as payloadUtil from "./lib/parsePayload";
-
-export function startProxy(connect: {payload: string, host: string, port: number}, fn: (socket: net.Socket) => void): void {
+export function startProxy(connect: {payload: string, host: string, port: number}, fn: (err?: Error, socket?: net.Socket) => void): void {
   const socket = net.createConnection({host: connect.host, port: connect.port});
+  socket.once("error", err => fn(err, null));
   socket.once("ready", async () => {
     socket.write(payloadUtil.convertPayload(connect.payload));
     const data = await new Promise<string>(resolve => socket.once("data", data => resolve(data.toString("utf8"))));
+    console.log(data);
     const payload = payloadUtil.parsePayload(data);
+    if (payload?.code >= 300 && payload?.code <= 399) return fn(new Error("300 Status, catch"), null);
     console.log(payload);
-    return fn(socket);
+    return fn(null, socket);
   })
 }
 

@@ -1,15 +1,12 @@
-export function convertPayload(payload: string): string {
+export function convertPayload(payload: string, method: "CONNECT"|"GET" = "CONNECT"): string {
   return payload
   .replace(/\[crlf(\*[0-9]+)?\]/gi, (_, rep?: string) => {let r = "[crlf]"; let repet = parseInt((rep||"").replace("*", "").trim())||0; while (repet > 1) {repet--;r+="[crlf]";} return r;})
   .replace(/\[crlf\]/gi, "\r\n")
   .replace(/\[cr\]/gi, "\r")
   .replace(/\[lf\]/gi, "\n")
-  .replace(/\[protocol\]/gi, "HTTP/1.0")
+  .replace(/\[protocol\]/gi, "HTTP/1.1")
   .replace(/\[ua\]/gi, `nodejs/${process.version}`)
-  .replace(/\[split_delay\]/gi, "[delay_split]")
-  .replace(/\[split_instant\]/gi, "[instant_split]")
-  .replace(/\[method\]/gi, "CONNECT")
-  .replace(/mip/gi, "127.0.0.1")
+  .replace(/\[method\]/gi, method)
   .replace(/\[lfcr\]/gi, "\n\r")
   .replace(/\[auth\]/gi, "");
 }
@@ -20,7 +17,7 @@ export type payloadObject = {
   method?: string,
   path?: string,
   version?: string,
-  code?: string,
+  code?: number,
   message?: string
 };
 
@@ -39,7 +36,7 @@ export function parsePayload(payloadRecived: string|Buffer): payloadObject {
     } else if (requestReg[1].test(fistLine)) {
       const [version, code, message] = fistLine.match(requestReg[1]).slice(1);
       payload.version = version.trim();
-      payload.code = code.trim();
+      payload.code = parseInt(code.trim());
       payload.message = message.trim();
     }
     payloadString = payloadString.replace(/\r?\n/, "").replace(fistLine, "");
